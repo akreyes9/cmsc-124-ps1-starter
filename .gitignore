@@ -3,3 +3,5 @@ build/
 build-san/
 run_tests.py
 __pycache__/
+#ignore pdf so that we can view the pdf inside VS code, to avoid context switching
+*.pdf
