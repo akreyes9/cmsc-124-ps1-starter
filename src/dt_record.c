@@ -1,4 +1,4 @@
-// Aleigha Keight Laranja Reyes
+// Aleighia Keith Reyes
 /*
  * dt_record.c: Records for Unit 5, Section F.
  *
@@ -30,16 +30,31 @@ struct dt_record {
  */
 dt_record *dt_record_new(const char **field_names, size_t field_count)
 {
-    /* TODO: Return NULL for more than DT_RECORD_MAX_FIELDS.
-       Copy each field name. Set each field to dt_value_nil().
-       fields {"name", "age"}       -> a record with two nil fields, in that order
-       eight fields                 -> fine, DT_RECORD_MAX_FIELDS is 8
-       nine fields                  -> NULL, and the driver reports DT_ERR_CAPACITY
-       cases/normal/record_basics.case, cases/capacity/record_max_fields.case,
-       cases/capacity/record_over_fields.case */
-    (void)field_names;
-    (void)field_count;
-    return NULL;
+    if (field_count > DT_RECORD_MAX_FIELDS) {
+        return NULL;
+    }
+
+    dt_record *r = malloc(sizeof(struct dt_record));
+    if (r == NULL) {
+        return NULL;
+    }
+
+    for (size_t i = 0; i < field_count; i++) {
+        size_t len = strlen(field_names[i]);
+        r->names[i] = malloc(len + 1);
+        if (r->names[i] == NULL) {
+            for (size_t j = 0; j < i; j++) {
+                free(r->names[j]);
+            }
+            free(r);
+            return NULL;
+        }
+        memcpy(r->names[i], field_names[i], len + 1);
+        r->values[i] = dt_value_nil();
+    }
+
+    r->count = field_count;
+    return r;
 }
 
 /*
