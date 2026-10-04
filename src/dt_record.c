@@ -120,14 +120,12 @@ dt_status dt_record_get(const dt_record *r, const char *field, dt_value *out)
  */
 dt_status dt_record_set(dt_record *r, const char *field, dt_value v)
 {
-    /* TODO: Use the same lookup and then write the value. Never add a field.
-       after `rec new person name age`:
-         dt_record_set(person, "age", dt_value_int(36))     -> DT_OK
-         dt_record_set(person, "salary", dt_value_int(1))   -> DT_ERR_FIELD
-         the record still has only the fields "name" and "age"
-       cases/normal/record_basics.case, cases/boundary/record_unknown_field.case */
-    (void)r;
-    (void)field;
-    (void)v;
+    for (size_t i = 0; i < r->count; i++) {
+        if (strcmp(r->names[i], field) == 0) {
+            r->values[i] = v;
+            return DT_OK;
+        }
+    }
+
     return DT_ERR_FIELD;
 }
