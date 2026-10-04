@@ -103,14 +103,13 @@ dt_status dt_record_field_name(const dt_record *r, size_t index, const char **ou
  */
 dt_status dt_record_get(const dt_record *r, const char *field, dt_value *out)
 {
-    /* TODO: Find the index for field. Return DT_ERR_FIELD when it is absent.
-       after `rec set person age 36`:
-         dt_record_get(person, "age", &out)      -> DT_OK, *out is the integer 36
-         dt_record_get(person, "salary", &out)   -> DT_ERR_FIELD, *out untouched
-       cases/normal/record_basics.case, cases/boundary/record_unknown_field.case */
-    (void)r;
-    (void)field;
-    (void)out;
+    for (size_t i = 0; i < r->count; i++) {
+        if (strcmp(r->names[i], field) == 0) {
+            *out = r->values[i];
+            return DT_OK;
+        }
+    }
+
     return DT_ERR_FIELD;
 }
 
