@@ -63,10 +63,15 @@ dt_record *dt_record_new(const char **field_names, size_t field_count)
  */
 void dt_record_free(dt_record *r)
 {
-    /* TODO: Release the copied field names. Then release the record.
-       a record holding a string value  -> the names go, the string stays
-       dt_record_free(NULL)             -> returns, having done nothing */
-    (void)r;
+    if (r == NULL) {
+        return;
+    }
+
+    for (size_t i = 0; i < r->count; i++) {
+        free(r->names[i]);
+    }
+
+    free(r);
 }
 
 /*
