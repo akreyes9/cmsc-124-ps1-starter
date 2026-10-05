@@ -69,12 +69,13 @@ void dt_list_free(dt_list *l)
  */
 size_t dt_list_len(const dt_list *l)
 {
-    /* TODO: Visit each cell and count it.
-       for a = (1 2 3):  dt_list_len(a) -> 3
-       for the empty list: dt_list_len(NULL) -> 0
-       cases/normal/list_basics.case */
-    (void)l;
-    return 0;
+    size_t count = 0;
+    
+    while (l != NULL) {
+        count++;
+        l = l->tail;
+    }
+    return count;
 }
 
 /*
