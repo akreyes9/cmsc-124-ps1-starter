@@ -1,4 +1,4 @@
-// Aleigha Keight Laranja Reyes
+// Aleighia Keith Reyes
 /*
  * dt_list.c: Lists for Unit 5, Section H.
  *
