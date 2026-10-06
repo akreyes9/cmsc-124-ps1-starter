@@ -63,7 +63,6 @@ dt_list *dt_list_cons(dt_value head, dt_list *tail)
 void dt_list_free(dt_list *l)
 {
     // Free only this cell; the tail may still be used by another list.
-    // free(NULL) is a safe no-op, so no NULL check is needed
     free(l);
 }
 
