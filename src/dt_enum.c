@@ -1,4 +1,4 @@
-// Aleigha Keight Laranja Reyes
+// Aleighia Keith Reyes
 /*
  * dt_enum.c: Enumerations for Unit 5, Section C.
  *
@@ -22,14 +22,12 @@ static const char *const COLOR_NAMES[] = { "RED", "GREEN", "BLUE" };
  */
 bool dt_enum_is_valid(int ordinal)
 {
-    /* TODO: Return true for an ordinal from zero through DT_COLOR_COUNT - 1.
-       dt_enum_is_valid(0)   -> true, RED
-       dt_enum_is_valid(2)   -> true, BLUE
-       dt_enum_is_valid(3)   -> false, one past the set
-       dt_enum_is_valid(-1)  -> false, below the lower bound */
-    (void)ordinal;
-    (void)COLOR_NAMES; /* Delete this line after you use COLOR_NAMES. */
-    return false;
+    // Valid ordinals are 0 .. DT_COLOR_COUNT - 1; anything else is out of range
+    if (ordinal >= DT_COLOR_COUNT || ordinal < 0) {
+        return false;
+    }
+
+    return true;
 }
 
 /*
@@ -38,15 +36,13 @@ bool dt_enum_is_valid(int ordinal)
  */
 dt_status dt_enum_name(int ordinal, const char **out)
 {
-    /* TODO: Return DT_ERR_RANGE when the ordinal is outside the set.
-       Otherwise, write the corresponding text to *out.
-       Validate the ordinal before you index COLOR_NAMES.
-       dt_enum_name(0, &out)  -> DT_OK, *out = "RED"
-       dt_enum_name(2, &out)  -> DT_OK, *out = "BLUE"
-       dt_enum_name(3, &out)  -> DT_ERR_RANGE, *out untouched
-       cases/normal/enum_names.case */
-    (void)ordinal;
-    (void)out;
+    // Validate first so we never index outside COLOR_NAMES
+    if (dt_enum_is_valid(ordinal)) {
+        *out = COLOR_NAMES[ordinal];   // Ordinal doubles as the array index
+        return DT_OK;
+    }
+
+    // Invalid ordinal: *out is left untouched, as the spec requires
     return DT_ERR_RANGE;
 }
 
@@ -56,12 +52,15 @@ dt_status dt_enum_name(int ordinal, const char **out)
  */
 dt_status dt_enum_from_name(const char *name, int *out)
 {
-    /* TODO: Search COLOR_NAMES. Return DT_ERR_RANGE when no text matches.
-       dt_enum_from_name("GREEN", &out)   -> DT_OK, out = 1
-       dt_enum_from_name("PURPLE", &out)  -> DT_ERR_RANGE, out untouched
-       dt_enum_from_name("1", &out)       -> DT_ERR_RANGE because no text matches
-       cases/normal/enum_names.case */
-    (void)name;
-    (void)out;
+    // Linear search over every declared color
+    for (int i = 0; i < DT_COLOR_COUNT; i++) {
+        // strcmp returns 0 on an exact, case-sensitive match
+        if (strcmp(name, COLOR_NAMES[i]) == 0) {
+            *out = i;          // The matching index is the ordinal
+            return DT_OK;
+        }
+    }
+
+    // No name matched: *out is left untouched
     return DT_ERR_RANGE;
 }

@@ -1,4 +1,4 @@
-// Aleigha Keight Laranja Reyes
+// Aleighia Keith Reyes
 /*
  * dt_value.c: Discriminated union for Unit 5, Section I.
  *
@@ -96,14 +96,13 @@ dt_value dt_value_ref(dt_ref *p)
  */
 dt_status dt_value_as_int(dt_value v, long long *out)
 {
-    /* TODO: Check v.tag for DT_INT. Write v.as.integer to *out after a match.
-       Otherwise, return DT_ERR_TAG and preserve *out.
-       dt_value_as_int(dt_value_int(42), &out)  -> DT_OK, out = 42
-       dt_value_as_int(dt_value_str(s), &out)   -> DT_ERR_TAG, out untouched
-       cases/normal/union_readers.case, cases/tag/as_int_on_string.case */
-    (void)v;
-    (void)out;
-    return DT_ERR_TAG;
+    // Check the tag first so we never read the wrong union member
+    if (v.tag != DT_INT) {
+        return DT_ERR_TAG;   // Wrong type: *out is left untouched
+    }
+
+    *out = v.as.integer;   // Tag matches, so the integer member is valid
+    return DT_OK;
 }
 
 /*
@@ -111,13 +110,13 @@ dt_status dt_value_as_int(dt_value v, long long *out)
  */
 dt_status dt_value_as_enum(dt_value v, int *out)
 {
-    /* TODO: Check DT_ENUM and write v.as.ordinal to *out.
-       dt_value_as_enum(dt_value_enum(2), &out)  -> DT_OK, out = 2 for BLUE
-       dt_value_as_enum(dt_value_nil(), &out)    -> DT_ERR_TAG, out untouched
-       cases/normal/union_readers.case, cases/tag/as_enum_on_nil.case */
-    (void)v;
-    (void)out;
-    return DT_ERR_TAG;
+    // Reject anything that isn't tagged as an enum
+    if (v.tag != DT_ENUM) {
+        return DT_ERR_TAG;   // *out is left untouched
+    }
+
+    *out = v.as.ordinal;   // Tag matches, so the ordinal member is valid
+    return DT_OK;
 }
 
 /*
@@ -125,12 +124,11 @@ dt_status dt_value_as_enum(dt_value v, int *out)
  */
 dt_status dt_value_as_str(dt_value v, dt_str **out)
 {
-    /* TODO: Check DT_STR and write v.as.string to *out.
-       dt_value_as_str(dt_value_str(s), &out)  -> DT_OK, *out is s
-       dt_value_as_str(dt_value_int(42), &out) -> DT_ERR_TAG, *out untouched
-       the tag check prevents the printer from reading 42 as an address
-       cases/normal/union_readers.case, cases/tag/as_str_on_int.case */
-    (void)v;
-    (void)out;
-    return DT_ERR_TAG;
+    // Without this check, `as str 42` would treat an integer as a pointer
+    if (v.tag != DT_STR) {
+        return DT_ERR_TAG;   // *out is left untouched
+    }
+
+    *out = v.as.string;   // Tag matches, so the string pointer is valid
+    return DT_OK;
 }
