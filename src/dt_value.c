@@ -96,11 +96,12 @@ dt_value dt_value_ref(dt_ref *p)
  */
 dt_status dt_value_as_int(dt_value v, long long *out)
 {
+    // Check the tag first so we never read the wrong union member
     if (v.tag != DT_INT) {
-        return DT_ERR_TAG;
+        return DT_ERR_TAG;   // Wrong type: *out is left untouched
     }
 
-    *out = v.as.integer;
+    *out = v.as.integer;   // Tag matches, so the integer member is valid
     return DT_OK;
 }
 
@@ -109,11 +110,12 @@ dt_status dt_value_as_int(dt_value v, long long *out)
  */
 dt_status dt_value_as_enum(dt_value v, int *out)
 {
+    // Reject anything that isn't tagged as an enum
     if (v.tag != DT_ENUM) {
-        return DT_ERR_TAG;
+        return DT_ERR_TAG;   // *out is left untouched
     }
 
-    *out = v.as.ordinal;
+    *out = v.as.ordinal;   // Tag matches, so the ordinal member is valid
     return DT_OK;
 }
 
@@ -122,10 +124,11 @@ dt_status dt_value_as_enum(dt_value v, int *out)
  */
 dt_status dt_value_as_str(dt_value v, dt_str **out)
 {
+    // Without this check, `as str 42` would treat an integer as a pointer
     if (v.tag != DT_STR) {
-        return DT_ERR_TAG;
+        return DT_ERR_TAG;   // *out is left untouched
     }
 
-    *out = v.as.string;
+    *out = v.as.string;   // Tag matches, so the string pointer is valid
     return DT_OK;
 }

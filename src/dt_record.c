@@ -30,6 +30,7 @@ struct dt_record {
  */
 dt_record *dt_record_new(const char **field_names, size_t field_count)
 {
+    // The arrays are fixed-size, so reject anything that won't fit
     if (field_count > DT_RECORD_MAX_FIELDS) {
         return NULL;
     }
@@ -40,19 +41,22 @@ dt_record *dt_record_new(const char **field_names, size_t field_count)
     }
 
     for (size_t i = 0; i < field_count; i++) {
+        // Copy the name so the record doesn't depend on the caller's strings
         size_t len = strlen(field_names[i]);
-        r->names[i] = malloc(len + 1);
+        r->names[i] = malloc(len + 1);   // +1 for the '\0' terminator
         if (r->names[i] == NULL) {
+            // Roll back: free only the names copied so far (0 .. i-1)
             for (size_t j = 0; j < i; j++) {
                 free(r->names[j]);
             }
             free(r);
             return NULL;
         }
-        memcpy(r->names[i], field_names[i], len + 1);
-        r->values[i] = dt_value_nil();
+        memcpy(r->names[i], field_names[i], len + 1);   // Includes the '\0'
+        r->values[i] = dt_value_nil();                  // Every field starts as nil
     }
 
+    // Set count last so it only reflects fully built fields
     r->count = field_count;
     return r;
 }
@@ -63,15 +67,17 @@ dt_record *dt_record_new(const char **field_names, size_t field_count)
  */
 void dt_record_free(dt_record *r)
 {
+    // Allow free-on-NULL, like free()
     if (r == NULL) {
         return;
     }
 
+    // Free each copied name; values are not freed because the record doesn't own them
     for (size_t i = 0; i < r->count; i++) {
         free(r->names[i]);
     }
 
-    free(r);
+    free(r);   // Free the record itself last
 }
 
 /*
@@ -79,6 +85,7 @@ void dt_record_free(dt_record *r)
  */
 size_t dt_record_field_count(const dt_record *r)
 {
+    // Count is stored, so no scanning is needed
     return r->count;
 }
 
@@ -89,11 +96,12 @@ size_t dt_record_field_count(const dt_record *r)
  */
 dt_status dt_record_field_name(const dt_record *r, size_t index, const char **out)
 {
+    // size_t is unsigned, so only the upper bound needs checking
     if (index >= r->count) {
         return DT_ERR_RANGE;
     }
 
-    *out = r->names[index];
+    *out = r->names[index];   // Points at the record's own copy; caller must not free it
     return DT_OK;
 }
 
@@ -103,13 +111,15 @@ dt_status dt_record_field_name(const dt_record *r, size_t index, const char **ou
  */
 dt_status dt_record_get(const dt_record *r, const char *field, dt_value *out)
 {
+    // Linear search by name; this is the run-time lookup the header describes
     for (size_t i = 0; i < r->count; i++) {
         if (strcmp(r->names[i], field) == 0) {
-            *out = r->values[i];
+            *out = r->values[i];   // Same index as the matching name
             return DT_OK;
         }
     }
 
+    // No name matched: *out is left untouched
     return DT_ERR_FIELD;
 }
 
@@ -120,6 +130,7 @@ dt_status dt_record_get(const dt_record *r, const char *field, dt_value *out)
  */
 dt_status dt_record_set(dt_record *r, const char *field, dt_value v)
 {
+    // Same search as dt_record_get, but writes instead of reads
     for (size_t i = 0; i < r->count; i++) {
         if (strcmp(r->names[i], field) == 0) {
             r->values[i] = v;
@@ -127,5 +138,6 @@ dt_status dt_record_set(dt_record *r, const char *field, dt_value v)
         }
     }
 
+    // Unknown field: set never creates new fields
     return DT_ERR_FIELD;
 }

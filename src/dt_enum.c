@@ -22,6 +22,7 @@ static const char *const COLOR_NAMES[] = { "RED", "GREEN", "BLUE" };
  */
 bool dt_enum_is_valid(int ordinal)
 {
+    // Valid ordinals are 0 .. DT_COLOR_COUNT - 1; anything else is out of range
     if (ordinal >= DT_COLOR_COUNT || ordinal < 0) {
         return false;
     }
@@ -35,11 +36,13 @@ bool dt_enum_is_valid(int ordinal)
  */
 dt_status dt_enum_name(int ordinal, const char **out)
 {
+    // Validate first so we never index outside COLOR_NAMES
     if (dt_enum_is_valid(ordinal)) {
-        *out = COLOR_NAMES[ordinal];
+        *out = COLOR_NAMES[ordinal];   // Ordinal doubles as the array index
         return DT_OK;
     }
 
+    // Invalid ordinal: *out is left untouched, as the spec requires
     return DT_ERR_RANGE;
 }
 
@@ -49,12 +52,15 @@ dt_status dt_enum_name(int ordinal, const char **out)
  */
 dt_status dt_enum_from_name(const char *name, int *out)
 {
+    // Linear search over every declared color
     for (int i = 0; i < DT_COLOR_COUNT; i++) {
+        // strcmp returns 0 on an exact, case-sensitive match
         if (strcmp(name, COLOR_NAMES[i]) == 0) {
-            *out = i;
+            *out = i;          // The matching index is the ordinal
             return DT_OK;
         }
     }
 
+    // No name matched: *out is left untouched
     return DT_ERR_RANGE;
 }

@@ -30,14 +30,17 @@
  */
 dt_status dt_int_add(long long a, long long b, long long *out)
 {
+    // b > 0: a + b overflows when a > LLONG_MAX - b
     if (b > 0 && a > LLONG_MAX - b) {
         return DT_ERR_OVERFLOW;
     }
 
+    // b < 0: a + b goes below the minimum when a < LLONG_MIN - b
     if (b < 0 && a < LLONG_MIN - b) {
         return DT_ERR_OVERFLOW;
     }
 
+    // Both checks passed, so the addition cannot overflow
     *out = a + b;
     return DT_OK;
 }
@@ -48,16 +51,19 @@ dt_status dt_int_add(long long a, long long b, long long *out)
  */
 dt_status dt_int_sub(long long a, long long b, long long *out)
 {
+    // b > 0: a - b goes below the minimum when a < LLONG_MIN + b
     if (b > 0 && a < LLONG_MIN + b) {
         return DT_ERR_OVERFLOW;
     }
 
+    // b < 0: a - b is a + |b|, which exceeds the max when a > LLONG_MAX + b
     if (b < 0 && a > LLONG_MAX + b) {
         return DT_ERR_OVERFLOW;
     }
 
+    // Safe to subtract; b == 0 can never overflow
     *out = a - b;
-    return DT_OK;    
+    return DT_OK;
 }
 
 /*
@@ -66,6 +72,7 @@ dt_status dt_int_sub(long long a, long long b, long long *out)
  */
 dt_status dt_int_mul(long long a, long long b, long long *out)
 {
+    // Anything times 0 is 0; also avoids dividing by zero below
     if (a == 0 || b == 0) {
         *out = 0;
         return DT_OK;
@@ -73,18 +80,23 @@ dt_status dt_int_mul(long long a, long long b, long long *out)
 
     if (a > 0) {
         if (b > 0) {
-            if (a > LLONG_MAX / b) return DT_ERR_OVERFLOW;   // + * +
+            // + * +: result too big if a > LLONG_MAX / b
+            if (a > LLONG_MAX / b) return DT_ERR_OVERFLOW;
         } else {
-            if (b < LLONG_MIN / a) return DT_ERR_OVERFLOW;   // + * -
+            // + * -: result too small if b < LLONG_MIN / a
+            if (b < LLONG_MIN / a) return DT_ERR_OVERFLOW;
         }
     } else {
         if (b > 0) {
-            if (a < LLONG_MIN / b) return DT_ERR_OVERFLOW;   // - * +
+            // - * +: result too small if a < LLONG_MIN / b
+            if (a < LLONG_MIN / b) return DT_ERR_OVERFLOW;
         } else {
-            if (a < LLONG_MAX / b) return DT_ERR_OVERFLOW;   // - * -
+            // - * -: result is positive, too big if a < LLONG_MAX / b
+            if (a < LLONG_MAX / b) return DT_ERR_OVERFLOW;
         }
     }
 
+    // All sign cases passed, so the multiplication is safe
     *out = a * b;
     return DT_OK;
 }

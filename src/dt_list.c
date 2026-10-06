@@ -44,13 +44,14 @@ dt_list *dt_list_nil(void)
  */
 dt_list *dt_list_cons(dt_value head, dt_list *tail)
 {
+    // Allocate exactly one cell; sizeof *cell stays correct if the type changes
     dt_list *cell = malloc(sizeof *cell);
     if (cell == NULL) {
-        return NULL;
+        return NULL;   // Allocation failed; nothing to clean up
     }
 
     cell->head = head;
-    cell->tail = tail;
+    cell->tail = tail;   // Share the tail by pointer, no copying
 
     return cell;
 }
@@ -61,6 +62,8 @@ dt_list *dt_list_cons(dt_value head, dt_list *tail)
  */
 void dt_list_free(dt_list *l)
 {
+    // Free only this cell; the tail may still be used by another list.
+    // free(NULL) is a safe no-op, so no NULL check is needed
     free(l);
 }
 
@@ -70,10 +73,11 @@ void dt_list_free(dt_list *l)
 size_t dt_list_len(const dt_list *l)
 {
     size_t count = 0;
-    
+
+    // Walk until the NULL terminator, counting each cell
     while (l != NULL) {
         count++;
-        l = l->tail;
+        l = l->tail;   // Advance to the next cell
     }
     return count;
 }
@@ -85,11 +89,12 @@ size_t dt_list_len(const dt_list *l)
  */
 dt_status dt_list_car(const dt_list *l, dt_value *out)
 {
+    // An empty list has no first cell to read
     if (l == NULL) {
         return DT_ERR_EMPTY;
     }
 
-    *out = l->head;
+    *out = l->head;   // Copy the first value out
     return DT_OK;
 }
 
@@ -99,10 +104,11 @@ dt_status dt_list_car(const dt_list *l, dt_value *out)
  */
 dt_status dt_list_cdr(const dt_list *l, dt_list **out)
 {
+    // An empty list has no tail; this differs from a tail that is empty
     if (l == NULL) {
         return DT_ERR_EMPTY;
     }
 
-    *out = l->tail;
+    *out = l->tail;   // May be NULL for a one-element list, which is valid
     return DT_OK;
 }
