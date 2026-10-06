@@ -24,7 +24,15 @@ Most of this isn't worth wanting. Reading the wrong type, mismatching tag and da
 
 ## Question 3
 
-<!-- TODO: answer Question 3 -->
+**Your `dt_map` keeps insertion order separately from the hash buckets, which is memory spent on something no lookup uses. Argue the other side: describe a design that drops it, say what breaks, and say whether you'd ship it.**
+
+One alternative is to keep only the hash buckets and their linked entries, along with the key count. We could remove the `order` array and its capacity field. Lookup would still hash the key and search its bucket. To traverse the map or free its entries, we would visit each bucket and follow its chain. This saves the extra array of entry pointers, including its unused capacity. Insertion would no longer need to grow that array, and removal would no longer need to find and shift an entry's position in it. It would not remove the cost of hashing, comparing keys, or allocating entries.
+
+The main thing that breaks is the promise that traversal follows insertion order. With our current code, new entries go at the front of a bucket chain, so keys that collide would appear in the reverse of their insertion order within that bucket. Across buckets, traversal would follow bucket numbers. That order can be repeatable for the same operations and hash function, but it does not represent the order in which the user added the keys. Updating a value would still work, but removing and reinserting a key would no longer guarantee that it appears last in the whole map. `dt_map_key_at` would also need to walk bucket chains to find a position, instead of indexing the order array directly. The printer would produce a different order, breaking the assignment's expected output and interface contract.
+
+In my RAG pipeline, I use an assignment like `rules_context, missing_disclosures, precedents = await retrieve_rag_context(...)`. Order matters there because the returned values are assigned by position. That is a different requirement from dictionary key order: looking up a value by its key does not depend on where that key appears during traversal. This distinction means that some parts of a system need ordered values while other parts only need key lookup.
+
+My proposed choice would be to keep insertion order for this assignment because the output depends on it. For a separate map used only for key lookups, such as a cache, I would consider shipping the bucket-only design if saving memory mattered and the interface clearly stated that traversal order was unspecified. I would keep ordered traversal when users needed predictable printed output or expected keys to appear in the order they added them. The simpler design is useful when those expectations are absent, but it would not be a compatible replacement for our current map.
 
 ## Question 4
 
